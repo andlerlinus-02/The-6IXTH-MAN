@@ -207,15 +207,15 @@ body {
 .btn-main {
   width: 80px;
   height: 80px;
-  background: #ef4444;
-  /* Red-500 */
+  background: #3b82f6;
+  /* Blue-500 */
   color: white;
 }
 
 .btn-main:hover {
-  background: #dc2626;
-  /* Red-600 */
-  box-shadow: 0 0 30px rgba(239, 68, 68, 0.4);
+  background: #2563eb;
+  /* Blue-600 */
+  box-shadow: 0 0 30px rgba(59, 130, 246, 0.4);
 }
 
 .btn-danger {
