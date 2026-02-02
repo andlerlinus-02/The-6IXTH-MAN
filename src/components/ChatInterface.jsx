@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { LiveClient } from '../logic/live-client';
 import AudioVisualizer from './AudioVisualizer';
 import knowledgeBase from '../data/knowledge.md?raw';
+import systemPrompt from '../data/system_prompt.md?raw';
 
 export default function ChatInterface() {
     const [isConnected, setIsConnected] = useState(false);
@@ -27,7 +28,7 @@ export default function ChatInterface() {
         }
 
         try {
-            clientRef.current = new LiveClient(API_KEY, MODEL, VOICE, knowledgeBase);
+            clientRef.current = new LiveClient(API_KEY, MODEL, VOICE, knowledgeBase, systemPrompt);
 
             // Setup callbacks
             clientRef.current.onOpen = () => {

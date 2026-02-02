@@ -8,11 +8,12 @@ import { AudioRecorder, AudioStreamer } from './audio-utils';
 const WS_URL = "wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent";
 
 export class LiveClient {
-    constructor(apiKey, model, voice, knowledge) {
+    constructor(apiKey, model, voice, knowledge, systemPrompt) {
         this.apiKey = apiKey;
         this.model = model;
         this.voice = voice || "Puck";
         this.knowledge = knowledge || "";
+        this.systemPrompt = systemPrompt || "You are a helpful assistant.";
         this.ws = null;
         this.recorder = null;
         this.streamer = null;
@@ -93,34 +94,14 @@ export class LiveClient {
     }
 
     getSystemInstruction() {
-        const lang = import.meta.env.VITE_AI_LANGUAGE || 'en';
-        const style = import.meta.env.VITE_AI_STYLE || 'la_slang';
-
-        let baseInstruction = "";
-
-        if (lang === 'de') {
-            baseInstruction = "Du bist 'The 6ixth Man'. Du bist ein freundlicher, weiser Mentor. Sprich Deutsch.";
-            if (style === 'la_slang') {
-                baseInstruction += " Nutze einen lockeren, modernen Jugendsprache-Stil, gemischt mit Weisheit. Du bist wie ein cooler Basketball-Coach aus der Hood, der aber Deutsch spricht. Nutze Anglizismen wo passend. Sei cool, autoritär aber herzlich.";
-            } else {
-                baseInstruction += " Sprich professionell, klar und höflich. Wie ein erfahrener Berater.";
-            }
-        } else {
-            // Default English
-            baseInstruction = "You are 'The 6ixth Man'. You are a wise mentor.";
-            if (style === 'la_slang') {
-                baseInstruction += " You are a 50-year-old retired black basketball player. You speak in English using AAVE (African American Vernacular English) naturally but professionally, like a wise coach. You are calm, authoritative, and encouraging. Your goal is to help the user navigate their life with wisdom from the court. Keep responses concise and spoken.";
-            } else {
-                baseInstruction += " Speak in standard, professional English. Be helpful, concise, and polite.";
-            }
-        }
+        let instruction = this.systemPrompt;
 
         // Append Knowledge
         if (this.knowledge) {
-            baseInstruction += `\n\n[CONTEXT/KNOWLEDGE BASE]\nUse the following information to answer questions if relevant:\n${this.knowledge}`;
+            instruction += `\n\n[CONTEXT/KNOWLEDGE BASE]\nUse the following information to answer questions if relevant:\n${this.knowledge}`;
         }
 
-        return baseInstruction;
+        return instruction;
     }
 
     handleMessage(msg) {
