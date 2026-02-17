@@ -1,15 +1,17 @@
 import { useState, useEffect, useRef } from 'react';
-import { Mic, MicOff, Phone, X } from 'lucide-react';
+import { Mic, MicOff, Phone, X, Keyboard, Send } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { LiveClient } from '../logic/live-client';
 import AudioVisualizer from './AudioVisualizer';
-import knowledgeBase from '../data/knowledge.md?raw';
-import systemPrompt from '../data/system_prompt.md?raw';
+import knowledgeBase from '../data/knowledge2.md?raw';
+import systemPrompt from '../data/system_prompt2.md?raw';
 
 export default function ChatInterface() {
     const [isConnected, setIsConnected] = useState(false);
     const [isMicOn, setIsMicOn] = useState(true);
     const [visualizerMode, setVisualizerMode] = useState('idle'); // idle, listening, speaking
+    const [isKeyboardMode, setIsKeyboardMode] = useState(false);
+    const [textInput, setTextInput] = useState('');
     const [error, setError] = useState(null);
 
     // Config
@@ -112,6 +114,26 @@ export default function ChatInterface() {
         }
     };
 
+    const handleToggleKeyboard = () => {
+        setIsKeyboardMode(!isKeyboardMode);
+    };
+
+    const handleSendText = () => {
+        if (!textInput.trim() || !clientRef.current) return;
+
+        clientRef.current.sendText(textInput);
+        setTextInput('');
+        setIsKeyboardMode(false); // Optional: close keyboard after sending? Or keep it open. Let's keep it open or just clear text.
+        // Let's just clear text for now.
+    };
+
+    const handleKeyDown = (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            handleSendText();
+        }
+    };
+
     return (
         <div className="app-container" onClick={handleInterrupt}>
             {/* Background Blobs */}
@@ -127,7 +149,7 @@ export default function ChatInterface() {
                         {isConnected ? 'LIVE' : 'OFFLINE'}
                     </div>
                 </div>
-                <h1>THE 6IXTH MAN</h1>
+                <h1>my lil homie</h1>
                 <div>{/* Settings Icon could go here */}</div>
             </div>
 
@@ -159,24 +181,58 @@ export default function ChatInterface() {
                         </motion.button>
                     ) : (
                         <>
-                            <motion.button
-                                className="btn-control"
-                                onClick={handleToggleMic}
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                            >
-                                {isMicOn ? <Mic size={24} /> : <MicOff size={24} />}
-                            </motion.button>
+                            <div className="controls-row">
+                                <motion.button
+                                    className={`btn-control ${isMicOn ? '' : 'btn-muted'}`}
+                                    onClick={handleToggleMic}
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                >
+                                    {isMicOn ? <Mic size={24} /> : <MicOff size={24} />}
+                                </motion.button>
 
-                            <motion.button
-                                className="btn-control btn-danger"
-                                onClick={handleToggleConnection}
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.1 }}
-                            >
-                                <X size={32} />
-                            </motion.button>
+                                <motion.button
+                                    className={`btn-control ${isKeyboardMode ? 'active' : ''}`}
+                                    onClick={handleToggleKeyboard}
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: 0.05 }}
+                                >
+                                    <Keyboard size={24} />
+                                </motion.button>
+
+                                <motion.button
+                                    className="btn-control btn-danger"
+                                    onClick={handleToggleConnection}
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: 0.1 }}
+                                >
+                                    <X size={32} />
+                                </motion.button>
+                            </div>
+
+                            {isKeyboardMode && (
+                                <motion.div
+                                    className="keyboard-input-container"
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: 10 }}
+                                >
+                                    <input
+                                        type="text"
+                                        value={textInput}
+                                        onChange={(e) => setTextInput(e.target.value)}
+                                        onKeyDown={handleKeyDown}
+                                        placeholder="Type your message..."
+                                        className="glass-input"
+                                        autoFocus
+                                    />
+                                    <button className="btn-send" onClick={handleSendText}>
+                                        <Send size={20} />
+                                    </button>
+                                </motion.div>
+                            )}
                         </>
                     )}
                 </AnimatePresence>

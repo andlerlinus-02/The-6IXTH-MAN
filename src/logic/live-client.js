@@ -155,6 +155,21 @@ export class LiveClient {
         this.send(msg);
     }
 
+    sendText(text) {
+        const msg = {
+            client_content: {
+                turns: [
+                    {
+                        role: "user",
+                        parts: [{ text: text }]
+                    }
+                ],
+                turn_complete: true
+            }
+        };
+        this.send(msg);
+    }
+
     send(data) {
         if (this.ws && this.ws.readyState === WebSocket.OPEN) {
             this.ws.send(JSON.stringify(data));

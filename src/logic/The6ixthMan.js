@@ -1,5 +1,5 @@
 /**
- * THE 6IXTH MAN - LOGIC CORE
+ * MY LIL HOMIE - LOGIC CORE
  * Digital Twin of Norman A. Coulter Jr.
  */
 
@@ -25,7 +25,7 @@ const INITIAL_GREETINGS = [
 ];
 
 // Simple simulation of the "Coulter Calm" response logic
-export class The6ixthManBrain {
+export class MyLilHomieBrain {
     constructor(userName = "Player") {
         this.userName = userName;
     }
