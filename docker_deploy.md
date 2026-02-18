@@ -1,10 +1,10 @@
-# Deploying "The 6IXTH MAN" on Hetzner with Docker
+# Deploying "My Lil Homie" on Hetzner with Docker
 
 Since you have a sophisticated setup with Caddy, N8N, and OpenWebUI, here is exactly how to integrate this app.
 
 ## 1. Prepare the Server
 You need to upload the app code to your server.
-Assuming your code lives at `/opt/dockers/the-6ixth-man` (or similar).
+Assuming your code lives at `/opt/dockers/my-lil-homie` (or similar).
 
 ## 2. Updated Docker Compose
 Add this service to your `docker-compose.yml`.
@@ -14,9 +14,9 @@ Add this service to your `docker-compose.yml`.
 > **Recommendation**: For a private server behind Caddy with Caddy Basic Auth (optional), this is fine. For a public site, be aware.
 
 ```yaml
-  the-6ixth-man:
+  my-lil-homie:
     build:
-      context: ./path/to/the-6ixth-man  # Change this to where you put the folders
+      context: ./path/to/my-lil-homie  # Change this to where you put the folders
       dockerfile: Dockerfile
       args:
         # Pass your ENV vars here so they get baked into the build
@@ -25,7 +25,7 @@ Add this service to your `docker-compose.yml`.
         VITE_GOOGLE_VOICE: "Charon"
         VITE_AI_LANGUAGE: "en"
         VITE_AI_STYLE: "la_slang"
-    container_name: the-6ixth-man
+    container_name: my-lil-homie
     restart: unless-stopped
     networks:
       - caddy_network
@@ -37,7 +37,7 @@ Since you manage Caddy manually (`./Caddyfile`), adds this entry:
 ```caddyfile
 # Replace with your desired domain
 chat.alpha-vision-ai.de {
-    reverse_proxy the-6ixth-man:80
+    reverse_proxy my-lil-homie:80
 }
 ```
 
@@ -46,10 +46,10 @@ Run this on your server:
 
 ```bash
 # 1. Pull/Build the new container
-docker-compose build the-6ixth-man
+docker-compose build my-lil-homie
 
 # 2. Start it up
-docker-compose up -d the-6ixth-man
+docker-compose up -d my-lil-homie
 
 # 3. Reload Caddy (if you changed Caddyfile)
 docker-compose restart caddy
