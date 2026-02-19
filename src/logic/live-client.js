@@ -8,12 +8,13 @@ import { AudioRecorder, AudioStreamer } from './audio-utils';
 const WS_URL = "wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent";
 
 export class LiveClient {
-    constructor(apiKey, model, voice, knowledge, systemPrompt) {
+    constructor(apiKey, model, voice, knowledge, systemPrompt, tools) {
         this.apiKey = apiKey;
         this.model = model;
         this.voice = voice || "Puck";
         this.knowledge = knowledge || "";
         this.systemPrompt = systemPrompt || "You are a helpful assistant.";
+        this.tools = tools || [];
         this.ws = null;
         this.recorder = null;
         this.streamer = null;
@@ -24,6 +25,7 @@ export class LiveClient {
         this.onClose = () => { };
         this.onError = () => { };
         this.onAudioLevel = () => { }; // For visualizer
+        this.onToolCall = async () => null; // Returns tool response
     }
 
     connect() {
@@ -78,6 +80,7 @@ export class LiveClient {
                         text: this.getSystemInstruction()
                     }]
                 },
+                tools: this.tools.length > 0 ? [{ function_declarations: this.tools }] : undefined,
                 generation_config: {
                     response_modalities: ["AUDIO"],
                     speech_config: {
@@ -104,7 +107,9 @@ export class LiveClient {
         return instruction;
     }
 
-    handleMessage(msg) {
+    async handleMessage(msg) {
+        // console.log("Received:", JSON.stringify(msg).substring(0, 200)); // Debug log
+
         // Handle Audio
         if (msg.serverContent?.modelTurn?.parts) {
             const parts = msg.serverContent.modelTurn.parts;
@@ -116,10 +121,51 @@ export class LiveClient {
             }
         }
 
+        // Handle Tool Calls (Robust Check)
+        const toolCall = msg.toolCall || msg.serverContent?.toolCall || msg.serverContent?.tool_call;
+
+        if (toolCall) {
+            console.log("Tool Call detected:", toolCall);
+            const functionCalls = toolCall.functionCalls || toolCall.function_calls;
+
+            if (functionCalls && functionCalls.length > 0) {
+                const responses = [];
+                for (const call of functionCalls) {
+                    const args = call.args || call.arguments;
+                    console.log("Processing Function:", call.name, args);
+                    try {
+                        const result = await this.onToolCall(call.name, args);
+                        responses.push({
+                            id: call.id,
+                            name: call.name,
+                            response: { result: result }
+                        });
+                    } catch (err) {
+                        console.error("Tool Execution Error:", err);
+                        responses.push({
+                            id: call.id,
+                            name: call.name,
+                            response: { error: JSON.stringify(err) }
+                        });
+                    }
+                }
+                this.sendToolResponse(responses);
+            }
+        }
+
         // Setup Complete
         if (msg.setupComplete) {
             console.log("Session Setup Complete");
         }
+    }
+
+    sendToolResponse(functionResponses) {
+        const msg = {
+            tool_response: {
+                function_responses: functionResponses
+            }
+        };
+        this.send(msg);
     }
 
     startAudio() {

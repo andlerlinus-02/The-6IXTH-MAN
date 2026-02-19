@@ -13,6 +13,7 @@ export default function ChatInterface() {
     const [isKeyboardMode, setIsKeyboardMode] = useState(false);
     const [textInput, setTextInput] = useState('');
     const [error, setError] = useState(null);
+    const [userName, setUserName] = useState(localStorage.getItem("userName") || "");
 
     // Config
     const API_KEY = import.meta.env.VITE_GOOGLE_API_KEY;
@@ -30,7 +31,31 @@ export default function ChatInterface() {
         }
 
         try {
-            clientRef.current = new LiveClient(API_KEY, MODEL, VOICE, knowledgeBase, systemPrompt);
+            // Prepare System Prompt
+            // Prepare System Prompt
+            let currentSystemPrompt = systemPrompt;
+            if (userName) {
+                currentSystemPrompt = `[CRITICAL: The user's name is "${userName}". ALWAYS address them by this name naturally in conversation. Never ask for their name again.]\n\n` + currentSystemPrompt;
+            } else {
+                currentSystemPrompt = `[CRITICAL: You do NOT know the user's name yet. Your HIGHEST PRIORITY is to find out their name. Ask for it naturally at the start. As soon as they tell you, IMMEDIATEY call the 'save_user_details' tool.]\n\n` + currentSystemPrompt;
+            }
+
+            // Define Tools
+            const tools = [
+                {
+                    name: "save_user_details",
+                    description: "Save the user's name to internal memory. Call this function immediately when the user provides their name.",
+                    parameters: {
+                        type: "OBJECT",
+                        properties: {
+                            name: { type: "STRING", description: "The user's first name" }
+                        },
+                        required: ["name"]
+                    }
+                }
+            ];
+
+            clientRef.current = new LiveClient(API_KEY, MODEL, VOICE, knowledgeBase, currentSystemPrompt, tools);
 
             // Setup callbacks
             clientRef.current.onOpen = () => {
@@ -45,9 +70,20 @@ export default function ChatInterface() {
             };
 
             clientRef.current.onError = (err) => {
-                setError("Connection Error. Check console.");
+                setError("Connection Error. Check console: " + err);
                 setIsConnected(false);
                 setVisualizerMode('idle');
+            };
+
+            clientRef.current.onToolCall = async (name, args) => {
+                console.log("Tool Called:", name, args);
+                if (name === "save_user_details") {
+                    setUserName(args.name);
+                    localStorage.setItem("userName", args.name);
+                    // Force a re-render or update (handled by state)
+                    return { success: true, message: `User name saved as ${args.name}. Address them as ${args.name} from now on.` };
+                }
+                return { error: "Unknown tool" };
             };
 
             // We hook into the streamer to detect "speaking"
@@ -82,7 +118,8 @@ export default function ChatInterface() {
                 clientRef.current.disconnect();
             }
         };
-    }, [API_KEY, MODEL, VOICE]);
+
+    }, [API_KEY, MODEL, VOICE]); // Removed userName to prevent disconnect loop
 
     const handleToggleConnection = () => {
         if (isConnected) {
@@ -150,7 +187,17 @@ export default function ChatInterface() {
                     </div>
                 </div>
                 <h1>my lil homie</h1>
-                <div>{/* Settings Icon could go here */}</div>
+                <div>
+                    {userName && (
+                        <motion.div
+                            className="user-name-badge"
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                        >
+                            <span style={{ opacity: 0.7 }}>User:</span> {userName}
+                        </motion.div>
+                    )}
+                </div>
             </div>
 
             {error && (

@@ -160,6 +160,26 @@ body {
   box-shadow: 0 0 10px rgba(244, 114, 182, 0.2);
 }
 
+.user-name-badge {
+  font-size: 0.85rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: var(--text-primary);
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.3s ease;
+}
+
+.user-name-badge:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: var(--accent-neon-blue);
+}
+
 .visualizer-area {
   flex: 1;
   display: flex;
