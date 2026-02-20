@@ -26,6 +26,7 @@ export class LiveClient {
         this.onError = () => { };
         this.onAudioLevel = () => { }; // For visualizer
         this.onToolCall = async () => null; // Returns tool response
+        this.onSetupComplete = () => { };
     }
 
     connect() {
@@ -156,6 +157,7 @@ export class LiveClient {
         // Setup Complete
         if (msg.setupComplete) {
             console.log("Session Setup Complete");
+            this.onSetupComplete();
         }
     }
 

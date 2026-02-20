@@ -64,6 +64,10 @@ export default function ChatInterface() {
                 setError(null);
             };
 
+            clientRef.current.onSetupComplete = () => {
+                clientRef.current.sendText("System: The microphone is now connected. Please initiate the conversation actively based on your ACTIVE START PROTOCOL.");
+            };
+
             clientRef.current.onClose = () => {
                 setIsConnected(false);
                 setVisualizerMode('idle');
